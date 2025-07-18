@@ -1,0 +1,15 @@
+No files changed, compilation skipped
+
+Ran 4 tests for test/Bank.t.sol:BankTest
+[PASS] testOnlyAdministratorCanWithdraw() (gas: 150065)
+[PASS] testUser1ManyDeposit() (gas: 169650)
+[PASS] test_Deposit() (gas: 135658)
+[PASS] test_top3() (gas: 449531)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 5.67ms (2.87ms CPU time)
+
+Ran 2 tests for test/Counter.t.sol:CounterTest
+[PASS] testFuzz_SetNumber(uint256) (runs: 256, μ: 32198, ~: 32354)
+[PASS] test_Increment() (gas: 31852)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.95ms (4.89ms CPU time)
+
+Ran 2 test suites in 43.15ms (13.62ms CPU time): 6 tests passed, 0 failed, 0 skipped (6 total tests)

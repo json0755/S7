@@ -1,0 +1,6 @@
+[PASS] testOnlyAdministratorCanWithdraw() (gas: 150065)
+[PASS] testUser1ManyDeposit() (gas: 169650)
+[PASS] test_Deposit() (gas: 135658)
+[PASS] test_top3() (gas: 449531)
+[PASS] testFuzz_SetNumber(uint256) (runs: 256, μ: 32198, ~: 32354)
+[PASS] test_Increment() (gas: 31852)
