@@ -1,0 +1,54 @@
+Compiling 1 files with Solc 0.8.30
+Solc 0.8.30 finished in 82.10ms
+No files changed, compilation skipped
+
+Ran 4 tests for test/Bank.t.sol:BankTest
+[PASS] testOnlyAdministratorCanWithdraw() (gas: 150077)
+[PASS] testUser1ManyDeposit() (gas: 169685)
+[PASS] test_Deposit() (gas: 135670)
+[PASS] test_top3() (gas: 449614)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 513.63µs (372.14µs CPU time)
+
+Ran 2 tests for test/Counter.t.sol:CounterTest
+[PASS] testFuzz_SetNumber(uint256) (runs: 258, μ: 32122, ~: 32354)
+[PASS] test_Increment() (gas: 31851)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 3.40ms (3.38ms CPU time)
+
+Ran 34 tests for test/NFTMarket.t.sol:NFTMarketTest
+[PASS] testFuzz_BoundaryPrices(uint256) (runs: 256, μ: 366160, ~: 366166)
+[PASS] testFuzz_RandomPriceAndRandomBuyer(uint256,address) (runs: 257, μ: 375256, ~: 375256)
+[PASS] testFuzz_RandomPriceAndTransferAndCall(uint256,address) (runs: 257, μ: 367830, ~: 367830)
+[PASS] testFuzz_RandomPriceWrongPayment(uint256,uint256,address) (runs: 256, μ: 383708, ~: 383942)
+[PASS] testFuzz_RandomTokenId(uint256,uint256) (runs: 256, μ: 360252, ~: 360252)
+[PASS] testInvariant_NFTMarketBalanceAlwaysZero() (gas: 1258466)
+[PASS] testInvariant_NFTMarketNeverHoldsTokens() (gas: 3091561)
+[PASS] test_buyNFT_AlreadySold_Revert() (gas: 410263)
+[PASS] test_buyNFT_BuyOwnNFT_Success() (gas: 337912)
+[PASS] test_buyNFT_DuplicatePurchase_CompleteFlow() (gas: 525487)
+[PASS] test_buyNFT_DuplicatePurchase_Revert() (gas: 433513)
+[PASS] test_buyNFT_InsufficientAllowance_Revert() (gas: 373758)
+[PASS] test_buyNFT_InsufficientAllowance_SufficientBalance_Revert() (gas: 382012)
+[PASS] test_buyNFT_InsufficientBalance_ExactAllowance_Revert() (gas: 383647)
+[PASS] test_buyNFT_InsufficientBalance_Revert() (gas: 375504)
+[PASS] test_buyNFT_NotListed_Revert() (gas: 247792)
+[PASS] test_buyNFT_Overpayment_Revert() (gas: 391112)
+[PASS] test_buyNFT_RelistAndRepurchase() (gas: 462553)
+[PASS] test_buyNFT_SelfPurchase_CompleteFlow() (gas: 359638)
+[PASS] test_buyNFT_Success() (gas: 380614)
+[PASS] test_buyNFT_Underpayment_Revert() (gas: 382011)
+[PASS] test_listNFT_ApprovalForAll_Success() (gas: 312168)
+[PASS] test_listNFT_DuplicateListing() (gas: 314449)
+[PASS] test_listNFT_MultipleUsers() (gas: 613169)
+[PASS] test_listNFT_NonExistentToken_Revert() (gas: 21467)
+[PASS] test_listNFT_NotApproved_Revert() (gas: 190459)
+[PASS] test_listNFT_NotOwner_Revert() (gas: 184084)
+[PASS] test_listNFT_PriceZero_Revert() (gas: 206967)
+[PASS] test_listNFT_Success() (gas: 310631)
+[PASS] test_tokensReceived_CorrectPayment_Success() (gas: 366276)
+[PASS] test_tokensReceived_ExtremeOverpayment_Revert() (gas: 363582)
+[PASS] test_tokensReceived_Overpayment_Revert() (gas: 383795)
+[PASS] test_tokensReceived_Underpayment_Revert() (gas: 383751)
+[PASS] test_tokensReceived_ZeroPayment_Revert() (gas: 363917)
+Suite result: ok. 34 passed; 0 failed; 0 skipped; finished in 128.57ms (328.44ms CPU time)
+
+Ran 3 test suites in 129.41ms (132.48ms CPU time): 40 tests passed, 0 failed, 0 skipped (40 total tests)
