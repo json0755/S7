@@ -11,7 +11,7 @@ contract DeployScript is Script {
     function run() public {
         vm.startBroadcast();
         // 1. 先部署 BaseERC20
-        MyToken myToken = new MyToken("MyToken", "MTK");
+        MyToken myToken = new MyToken("BapeToken", "BAPE");
         console2.log("BaseERC20 address:", address(myToken));
         // 2. 再部署 TokenBank，传入 token 地址
         TokenBank tokenBank = new TokenBank(address(myToken));

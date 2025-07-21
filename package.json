@@ -1,5 +1,7 @@
 {
+	"type": "module",
 	"dependencies": {
+		"ethers": "^6.15.0",
 		"viem": "^2.33.0"
 	}
 }

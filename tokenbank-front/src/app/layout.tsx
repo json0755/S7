@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <QueryClientProvider client={queryClient}>
           <WagmiProvider config={wagmiConfig}>
-            {children}
+        {children}
           </WagmiProvider>
         </QueryClientProvider>
       </body>

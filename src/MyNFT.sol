@@ -4,7 +4,6 @@ pragma solidity ^0.8.0; // 指定Solidity编译器版本
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "../src/BaseERC721.sol";
 import "../src/BaseERC20.sol";
-import "../src/NFTMarket.sol";
 import "../src/MyNFT.sol";
 
 // MyNFT 合约，继承自ERC721URIStorage，实现NFT的铸造和URI存储

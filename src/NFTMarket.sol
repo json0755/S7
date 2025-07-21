@@ -3,10 +3,17 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/interfaces/IERC1363Receiver.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./BaseERC721.sol"; // 导入NFT合约接口
 
 // NFTMarket 合约，支持用自定义ERC20扩展Token买卖NFT
-contract NFTMarket is IERC1363Receiver {
+contract NFTMarket is IERC1363Receiver,IERC721Receiver {
+    // 事件声明
+    // 监听 NFTListed：表示有 NFT 被上架（卖家行为）
+    event NFTListed(address indexed seller, address indexed nftAddress, uint256 indexed tokenId, uint256 price);
+    // 监听 NFTBought：表示有 NFT 被买走（买家行为）
+    event NFTBought(address indexed buyer, address indexed nftAddress, uint256 indexed tokenId, uint256 price);
+
     // 记录NFT的上架信息
     struct Listing {
         address seller; // 卖家地址
@@ -50,6 +57,7 @@ contract NFTMarket is IERC1363Receiver {
             price: price,
             active: true
         }); // 记录上架信息
+        emit NFTListed(msg.sender, nftAddress, tokenId, price);
     }
 
     /**
@@ -72,6 +80,7 @@ contract NFTMarket is IERC1363Receiver {
         BaseERC721 nft = BaseERC721(nftAddress);
         nft.transferFrom(item.seller, msg.sender, tokenId);
         item.active = false; // 标记为已售出
+        emit NFTBought(msg.sender, nftAddress, tokenId, item.price);
     }
 
     /**
@@ -104,7 +113,17 @@ contract NFTMarket is IERC1363Receiver {
         BaseERC721 nft = BaseERC721(nftAddress);
         nft.transferFrom(item.seller, from, tokenId);
         item.active = false; // 标记为已售出
-        
+
         return this.onTransferReceived.selector; // 返回接口选择器
     }
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+
 } 
