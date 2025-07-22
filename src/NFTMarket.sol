@@ -126,4 +126,16 @@ contract NFTMarket is IERC1363Receiver,IERC721Receiver {
         return this.onERC721Received.selector;
     }
 
+    /**
+    * @dev 下架NFT（只能由卖家本人操作）
+    * @param nftAddress NFT合约地址
+    * @param tokenId NFT的ID
+    */
+    function unlist(address nftAddress, uint256 tokenId) public {
+        Listing storage item = listings[nftAddress][tokenId];
+        require(item.active, "NFT is not listed");
+        require(item.seller == msg.sender, "Only seller can unlist");
+        item.active = false;
+    }
+
 } 

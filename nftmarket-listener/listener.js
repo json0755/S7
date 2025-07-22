@@ -1,25 +1,19 @@
-import { createPublicClient, http, parseAbi } from 'viem';
+import { createPublicClient, http, parseAbiItem } from 'viem';
 import { sepolia } from 'viem/chains';
+import { abi_origin } from './abi.js';
 
-// 替换为你的NFTMarket合约地址
-const NFTMARKET_ADDRESS = '0x74F8629751902A7d4650DAED78A9a067D9932Ef7';
+const NFTMARKET_ADDRESS = '0x7e6D1Ca903f90A9E14241Ad8da797253c3910180';
 
-// 事件 ABI
-const abi = parseAbi([
-  'event NFTListed(address indexed seller, address indexed nftAddress, uint256 indexed tokenId, uint256 price)',
-  'event NFTBought(address indexed buyer, address indexed nftAddress, uint256 indexed tokenId, uint256 price)'
-]);
+const abi = abi_origin;
 
 const client = createPublicClient({
   chain: sepolia,
-  transport: http('https://gateway.pinata.cloud/ipfs/bafkreidb6munmoilyyhaimrsyge5eedvsmdgfz2qs7zkj5vmdvfsgwqo3u')
+  transport: http('https://sepolia.drpc.org')
 });
 
-// 监听 NFTListed
 client.watchEvent({
   address: NFTMARKET_ADDRESS,
-  abi,
-  eventName: 'NFTListed',
+  event: parseAbiItem("event NFTListed(address,address,uint256,uint256)"),
   onLogs: logs => {
     logs.forEach(log => {
       console.log(`[上架] 卖家: ${log.args.seller}, NFT: ${log.args.nftAddress}, TokenId: ${log.args.tokenId}, 价格: ${log.args.price}`);
@@ -27,17 +21,17 @@ client.watchEvent({
   }
 });
 
-// 监听 NFTBought
 client.watchEvent({
   address: NFTMARKET_ADDRESS,
   abi,
-  eventName: 'NFTBought',
+  event: parseAbiItem("event NFTBought(address, address, uint256, uint256)"),
+  // eventName: 'NFTBought',
   onLogs: logs => {
+    console.log(logs);
     logs.forEach(log => {
       console.log(`[买卖] 买家: ${log.args.buyer}, NFT: ${log.args.nftAddress}, TokenId: ${log.args.tokenId}, 价格: ${log.args.price}`);
     });
   }
 });
 
-
-console.log('监听 NFTMarket 合约事件中...'); 
+console.log('监听 NFTMarket 合约事件中...');
