@@ -11,10 +11,12 @@ import {
   useConnect,
   useDisconnect,
 } from "wagmi";
+import { writeContract } from "wagmi/actions";
+import { config } from "./wagmiConfig";
 
-const NFTMARKET_ADDRESS = "0xYourNFTMarketAddress" as `0x${string}`;
-const TOKEN_ADDRESS = "0xYourTokenAddress" as `0x${string}`;
-const NFT_ADDRESS = "0xYourNFTAddress" as `0x${string}`;
+const NFTMARKET_ADDRESS = "0x92E02E9bAb5026240279AF91089b435dDc2C2019" as `0x${string}`;
+const TOKEN_ADDRESS = "0x8D9C46A95DF8586b4a244D6ad824B6238a779c29" as `0x${string}`;
+const NFT_ADDRESS = "0x1D159e7802Bef0009723DAD02E99297869fF0868" as `0x${string}`;
 const TOKEN_SYMBOL = "BAPE";
 const TOKEN_DECIMALS = 18;
 
@@ -33,9 +35,24 @@ function NFTMarketApp() {
   // 上架操作
   const handleList = async () => {
     if (!isConnected) return message.error("请先连接钱包");
+    if (!listTokenId || !listPrice) return message.error("请填写完整信息");
     try {
-      message.info("请在钱包中确认上架交易");
-      // ...合约交互逻辑（略，需集成 viem/ethers）
+      console.log("listTokenId", listTokenId, NFT_ADDRESS)
+      // 1. 先授权 NFTMarket 合约操作你的 NFT
+      await writeContract(config, {
+        address: NFT_ADDRESS,
+        abi: myNFTAbi,
+        functionName: "approve",
+        args: [NFTMARKET_ADDRESS, BigInt(listTokenId)],
+      });
+      // 2. 调用 list 上架
+      await writeContract(config, {
+        address: NFTMARKET_ADDRESS,
+        abi: nftMarketAbi,
+        functionName: "list",
+        args: [NFT_ADDRESS, BigInt(listTokenId), parseUnits(listPrice, TOKEN_DECIMALS)],
+      });
+      message.success("上架成功");
       setListTokenId("");
       setListPrice("");
     } catch (e: any) {
@@ -46,9 +63,34 @@ function NFTMarketApp() {
   // 购买操作
   const handleBuy = async () => {
     if (!isConnected) return message.error("请先连接钱包");
+    if (!buyTokenId) return message.error("请填写TokenId");
     try {
-      message.info("请在钱包中确认购买交易");
-      // ...合约交互逻辑（略，需集成 viem/ethers）
+      // 1. 查询链上该NFT的价格
+      const listing: any = await (await import("wagmi/actions")).readContract(config, {
+        address: NFTMARKET_ADDRESS,
+        abi: nftMarketAbi,
+        functionName: "listings",
+        args: [NFT_ADDRESS, BigInt(String(buyTokenId))],
+      });
+      const price = listing.price ?? (Array.isArray(listing) ? listing[3] : undefined);
+      if (!price || price === "0" || price === BigInt(0)) return message.error("该NFT未上架或价格为0");
+
+      // 2. 先授权 NFTMarket 合约消费你的 Token
+      await writeContract(config, {
+        address: TOKEN_ADDRESS,
+        abi: myTokenAbi,
+        functionName: "approve",
+        args: [NFTMARKET_ADDRESS, price],
+      });
+
+      // 3. 调用 buyNFT
+      await writeContract(config, {
+        address: NFTMARKET_ADDRESS,
+        abi: nftMarketAbi,
+        functionName: "buyNFT",
+        args: [NFT_ADDRESS, BigInt(String(buyTokenId))],
+      });
+      message.success("购买成功");
       setBuyTokenId("");
     } catch (e: any) {
       message.error(e?.reason || e?.message || "购买失败");
