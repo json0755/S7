@@ -2,13 +2,13 @@ import { createPublicClient, http, parseAbiItem } from 'viem';
 import { sepolia } from 'viem/chains';
 import { abi_origin } from './abi.js';
 
-const NFTMARKET_ADDRESS = '0x7e6D1Ca903f90A9E14241Ad8da797253c3910180';
+const NFTMARKET_ADDRESS = '0x2e50ba7CE19C591481De8C893213D918C74c5a0C';
 
 const abi = abi_origin;
 
 const client = createPublicClient({
   chain: sepolia,
-  transport: http('https://sepolia.drpc.org')
+  transport: http('https://eth-sepolia.api.onfinality.io/public')
 });
 
 client.watchEvent({
