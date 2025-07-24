@@ -37,6 +37,16 @@ contract Bank {
         deposit();
     }
 
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Not admin");
+        _;
+    }
+
+    function setAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != address(0), "Invalid address");
+        admin = newAdmin;
+    }
+
     // 更新top3，保证top3为存款最多的3个用户且无重复
     function updateTop3() internal {
         // 初始化临时数组
