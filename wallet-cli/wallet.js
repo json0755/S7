@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Wallet, JsonRpcProvider, Contract, parseUnits, formatEther } from "ethers";
+import { Wallet, JsonRpcProvider, Contract, parseUnits, formatEther, formatUnits } from "ethers";
 import fs from "fs";
 
 const SEPOLIA_RPC = "https://eth-sepolia.public.blastapi.io";
@@ -60,7 +60,13 @@ async function buildERC20Tx(contractAddr, to, amount) {
     maxPriorityFeePerGas,
     gasLimit: 100000 // 可根据实际情况调整
   };
-  fs.writeFileSync("erc20tx.json", JSON.stringify(tx, null, 2));
+  fs.writeFileSync(
+    "erc20tx.json",
+    JSON.stringify(tx, (key, value) =>
+      typeof value === "bigint" ? value.toString() : value,
+      2
+    )
+  );
   console.log("已构建原始交易，已保存到 erc20tx.json");
 }
 
@@ -77,8 +83,35 @@ async function signTx() {
 // 5. 发送已签名交易
 async function sendTx() {
   const rawTx = fs.readFileSync("signedtx.txt", "utf-8");
-  const txHash = await provider.sendTransaction(rawTx);
-  console.log("已发送，交易哈希:", txHash.hash);
+  const txResponse = await provider.broadcastTransaction(rawTx);
+  console.log("已发送，交易哈希:", txResponse.hash);
+}
+
+// 6. 一步到位：自动构建、签名并发送 ERC20 转账（自动管理 nonce）
+async function sendERC20(contractAddr, to, amount) {
+  const { privateKey } = JSON.parse(fs.readFileSync(WALLET_FILE));
+  const wallet = new Wallet(privateKey, provider);
+  const erc20 = new Contract(contractAddr, ERC20_ABI, wallet); // 用 wallet 作为 signer
+  const decimals = await erc20.decimals();
+  const value = parseUnits(amount, decimals);
+
+  // 直接用合约对象发起交易，自动管理 nonce 和 gas
+  const tx = await erc20.transfer(to, value);
+  console.log("已发送，交易哈希:", tx.hash);
+  await tx.wait();
+  console.log("交易已上链");
+}
+
+// 查询ERC20余额
+async function queryTokenBalance(contractAddr) {
+  const { privateKey } = JSON.parse(fs.readFileSync(WALLET_FILE));
+  const wallet = new Wallet(privateKey, provider);
+  const erc20 = new Contract(contractAddr, ERC20_ABI, provider);
+  const balance = await erc20.balanceOf(wallet.address);
+  const decimals = await erc20.decimals();
+  // 格式化显示
+  const formatted = formatUnits(balance, decimals);
+  console.log(`Token余额: ${formatted} (decimals: ${decimals})`);
 }
 
 async function main() {
@@ -97,6 +130,18 @@ async function main() {
     await signTx();
   } else if (cmd === "send") {
     await sendTx();
+  } else if (cmd === "erc20send") {
+    if (args.length < 3) {
+      console.log("用法: node wallet.js erc20send <ERC20合约地址> <收款地址> <数量>");
+      return;
+    }
+    await sendERC20(args[0], args[1], args[2]);
+  } else if (cmd === "tokenbalance") {
+    if (args.length < 1) {
+      console.log("用法: node wallet.js tokenbalance <ERC20合约地址>");
+      return;
+    }
+    await queryTokenBalance(args[0]);
   } else {
     console.log("用法:");
     console.log("  node wallet.js generate");
@@ -104,6 +149,8 @@ async function main() {
     console.log("  node wallet.js erc20tx <ERC20合约地址> <收款地址> <数量>");
     console.log("  node wallet.js sign");
     console.log("  node wallet.js send");
+    console.log("  node wallet.js erc20send <ERC20合约地址> <收款地址> <数量>");
+    console.log("  node wallet.js tokenbalance <ERC20合约地址>");
   }
 }
 
