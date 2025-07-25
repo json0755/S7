@@ -5,6 +5,7 @@ pragma solidity ^0.8.0; // 指定Solidity编译器版本
 interface IBaseERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool); // 代理转账函数声明
     function transfer(address to, uint256 amount) external returns (bool); // 普通转账函数声明
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external; // EIP2612 permit 函数声明
 }
 
 // TokenBank 合约，允许用户存入和取出 BaseERC20 Token
@@ -27,5 +28,30 @@ contract TokenBank {
         require(balances[msg.sender] >= amount, unicode"余额不足"); // 检查用户余额
         balances[msg.sender] -= amount; // 扣减用户在银行的存款记录
         require(token.transfer(msg.sender, amount), unicode"transfer 失败"); // 从银行合约转移 Token 回用户账户
+    }
+
+    /**
+     * @dev 使用 permit 签名进行存款，无需事先调用 approve
+     * @param amount 存款金额
+     * @param deadline permit 签名的截止时间
+     * @param v 签名的 v 值
+     * @param r 签名的 r 值
+     * @param s 签名的 s 值
+     */
+    function permitDeposit(
+        uint256 amount,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public {
+        require(amount > 0, unicode"存入数量必须大于0"); // 检查存入数量
+        
+        // 使用 permit 进行授权，允许本合约从用户账户转移 token
+        token.permit(msg.sender, address(this), amount, deadline, v, r, s);
+        
+        // 执行转账并更新余额
+        require(token.transferFrom(msg.sender, address(this), amount), unicode"transferFrom 失败");
+        balances[msg.sender] += amount; // 增加用户在银行的存款记录
     }
 }
