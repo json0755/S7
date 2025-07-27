@@ -19,12 +19,12 @@ export interface SignatureTransferDetails {
 export const PERMIT2_DOMAIN_NAME = "Permit2";
 export const PERMIT2_DOMAIN_VERSION = "1";
 
-// Permit2 EIP-712 类型哈希
+// Permit2 EIP-712 类型哈希（与合约保持一致）
 export const TOKEN_PERMISSIONS_TYPEHASH = "TokenPermissions(address token,uint256 amount)";
-export const PERMIT_TRANSFER_FROM_TYPEHASH = "PermitTransferFrom(TokenPermissions permitted,uint256 nonce,uint256 deadline)TokenPermissions(address token,uint256 amount)";
+export const PERMIT_TRANSFER_FROM_TYPEHASH = "PermitTransferFrom(TokenPermissions permitted,uint256 nonce,uint256 deadline)";
 
 // Permit2 官方合约地址（多链通用）
-export const PERMIT2_ADDRESS = "0x769DA7B0919FF7ADe64bc556B2f52b434E11E82c" as const;
+export const PERMIT2_ADDRESS = "0xe32b6e161a3d9bEb7D2882716b78C2DCbAAB6Ad9" as const;
 
 export const permit2Abi = [
   {

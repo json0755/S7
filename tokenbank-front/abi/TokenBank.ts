@@ -60,15 +60,6 @@ export const tokenBankAbi = [
         { "name": "amount", "type": "uint256", "internalType": "uint256" },
         { "name": "nonce", "type": "uint256", "internalType": "uint256" },
         { "name": "deadline", "type": "uint256", "internalType": "uint256" },
-        {
-          "name": "transferDetails",
-          "type": "tuple",
-          "internalType": "struct SignatureTransferDetails",
-          "components": [
-            { "name": "to", "type": "address", "internalType": "address" },
-            { "name": "requestedAmount", "type": "uint256", "internalType": "uint256" }
-          ]
-        },
         { "name": "signature", "type": "bytes", "internalType": "bytes" }
       ],
       "outputs": [],

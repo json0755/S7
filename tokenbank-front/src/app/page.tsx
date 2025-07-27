@@ -8,8 +8,8 @@ import { permit2Abi, PERMIT2_ADDRESS, PERMIT2_DOMAIN_NAME, PERMIT2_DOMAIN_VERSIO
 import { Button, Input, Card, Typography, Space, message, Divider, Row, Col, Tooltip, Radio, Switch } from "antd";
 import { parseUnits, formatUnits } from "viem";
 
-const TOKENBANK_ADDRESS = "0x7c666d53BA337688B25f0883BFc93f2DF8900bBc" as `0x${string}`;
-const TOKEN_ADDRESS = "0x7b661cAc90464E6ca990bb95E66f178ce9F0189F" as `0x${string}`;
+const TOKENBANK_ADDRESS = "0x8088fA53C22aB521d0aE1f84A42A70A4a131184D" as `0x${string}`;
+const TOKEN_ADDRESS = "0xd5Be2044b11D75C4d199CE3e4f1F8b79C37Cb9EB" as `0x${string}`;
 const TOKEN_SYMBOL = "BAPE";
 const TOKEN_DECIMALS = 18;
 
@@ -23,7 +23,27 @@ export default function TokenBankApp() {
   console.log("🔧 前端配置信息:");
   console.log("- TOKEN_ADDRESS:", TOKEN_ADDRESS);
   console.log("- TOKENBANK_ADDRESS:", TOKENBANK_ADDRESS);
+  console.log("- PERMIT2_ADDRESS:", PERMIT2_ADDRESS);
   console.log("- 注意：如果使用旧的MyToken地址，签名存款将无法工作！");
+  
+  // 检查Permit2授权状态函数
+  const checkPermit2Authorization = () => {
+    if (!address) {
+      console.log("❌ 钱包未连接");
+      return false;
+    }
+    
+    const allowanceAmount = typeof permit2Allowance === "bigint" ? permit2Allowance : BigInt(0);
+    console.log("🔍 当前Permit2授权状态:");
+    console.log("- 用户地址:", address);
+    console.log("- Token合约:", TOKEN_ADDRESS);
+    console.log("- 被授权的Permit2:", PERMIT2_ADDRESS);
+    console.log("- 授权金额:", allowanceAmount.toString());
+    console.log("- 授权金额(格式化):", formatUnits(allowanceAmount, TOKEN_DECIMALS), TOKEN_SYMBOL);
+    console.log("- 是否已授权:", allowanceAmount > BigInt(0));
+    
+    return allowanceAmount > BigInt(0);
+  };
 
   // 查询 Token 余额
   const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
@@ -509,15 +529,9 @@ export default function TokenBankApp() {
             }
             
             try {
-              // 构造转账详情
-              const transferDetails = {
-                to: TOKENBANK_ADDRESS,
-                requestedAmount: amount,
-              } as const;
-
               console.log("📞 调用depositWithPermit2合约方法...");
-              console.log("- transferDetails:", transferDetails);
-              console.log("- 调用参数: [amount, nonce, deadline, transferDetails, signature]");
+              console.log("- 调用参数: [amount, nonce, deadline, signature]");
+              console.log("✅ ABI已修复，参数匹配合约实现");
               console.log("- amount:", amount.toString());
               console.log("- nonce:", nonce.toString());
               console.log("- deadline:", deadline.toString());
@@ -531,13 +545,14 @@ export default function TokenBankApp() {
                 console.error("❌ 签名长度不正确!");
               }
 
-              // 调用depositWithPermit2
+              // 调用depositWithPermit2（参数修正：移除transferDetails）
               console.log("📤 提交depositWithPermit2交易...");
+              console.log("🔧 合约函数签名: depositWithPermit2(uint256 amount, uint256 nonce, uint256 deadline, bytes signature)");
               permit2Deposit({
                 address: TOKENBANK_ADDRESS,
                 abi: tokenBankAbi,
                 functionName: "depositWithPermit2",
-                args: [amount, nonce, deadline, transferDetails, signature],
+                args: [amount, nonce, deadline, signature],
               });
 
               console.log("⏳ 交易已提交，等待MetaMask确认...");
@@ -554,8 +569,8 @@ export default function TokenBankApp() {
               console.log("  - amount:", amount.toString());
               console.log("  - nonce:", nonce.toString());
               console.log("  - deadline:", deadline.toString());
-              console.log("  - transferDetails.to:", TOKENBANK_ADDRESS);
-              console.log("  - transferDetails.requestedAmount:", amount.toString());
+              console.log("  - to (内部自动设为TokenBank):", TOKENBANK_ADDRESS);
+              console.log("  - requestedAmount (内部自动设为amount):", amount.toString());
               console.log("  - signature:", signature);
               console.log("🔗 Etherscan测试链接:");
               console.log(`https://sepolia.etherscan.io/address/${TOKENBANK_ADDRESS}#writeContract`);
@@ -603,10 +618,15 @@ export default function TokenBankApp() {
     const amount = parseUnits(depositAmount, TOKEN_DECIMALS);
     const allowanceAmount = typeof permit2Allowance === "bigint" ? permit2Allowance : BigInt(0);
     
-    console.log("🔍 授权检查:");
-    console.log("- 需要金额:", amount.toString());
-    console.log("- 授权金额:", allowanceAmount.toString());
+    console.log("🔍 详细授权检查:");
+    console.log("- 用户地址:", address);
+    console.log("- Token地址:", TOKEN_ADDRESS);
+    console.log("- Permit2地址:", PERMIT2_ADDRESS);
+    console.log("- 需要金额:", amount.toString(), `(${formatUnits(amount, TOKEN_DECIMALS)} ${TOKEN_SYMBOL})`);
+    console.log("- 当前授权:", allowanceAmount.toString(), `(${formatUnits(allowanceAmount, TOKEN_DECIMALS)} ${TOKEN_SYMBOL})`);
     console.log("- 授权是否足够:", allowanceAmount >= amount);
+    console.log("- permit2Allowance原始值:", permit2Allowance);
+    console.log("- permit2Allowance类型:", typeof permit2Allowance);
 
     if (allowanceAmount < amount) {
       console.log("⚠️ 授权不足，开始授权流程");
@@ -944,10 +964,55 @@ export default function TokenBankApp() {
                  "Permit2签名存款"}
               </Button>
             </Space.Compact>
-            {depositMethod !== 'traditional' && (
+            {depositMethod === 'permit2' && (
+              <div style={{ marginTop: 8, padding: 8, backgroundColor: "#f9f9f9", borderRadius: 6 }}>
+                <div style={{ fontSize: 12, marginBottom: 6 }}>
+                  <strong>Permit2授权状态:</strong> {
+                    typeof permit2Allowance === "bigint" && permit2Allowance > BigInt(0) ? 
+                    <span style={{ color: "#52c41a" }}>✅ 已授权 ({formatUnits(permit2Allowance, TOKEN_DECIMALS)} {TOKEN_SYMBOL})</span> : 
+                    <span style={{ color: "#ff4d4f" }}>❌ 未授权</span>
+                  }
+                </div>
+                                 <div style={{ marginBottom: 4 }}>
+                   {(!permit2Allowance || permit2Allowance === BigInt(0)) ? (
+                     <Button 
+                       size="small" 
+                       type="primary" 
+                       onClick={approvePermit2}
+                       loading={isApproving}
+                       style={{ marginRight: 8 }}
+                     >
+                       授权Permit2合约
+                     </Button>
+                   ) : (
+                     <Button 
+                       size="small" 
+                       type="default" 
+                       onClick={() => {
+                         checkPermit2Authorization();
+                         refetchPermit2Allowance?.();
+                       }}
+                       style={{ marginRight: 8 }}
+                     >
+                       刷新授权状态
+                     </Button>
+                   )}
+                   <Button 
+                     size="small" 
+                     type="default" 
+                     onClick={checkPermit2Authorization}
+                   >
+                     检查授权状态
+                   </Button>
+                 </div>
+                <Typography.Text type="secondary" style={{ fontSize: 11, display: "block" }}>
+                  💡 Permit2需要先授权才能使用签名转账功能
+                </Typography.Text>
+              </div>
+            )}
+            {depositMethod === 'permit' && (
               <Typography.Text type="secondary" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
-                💡 {depositMethod === 'permit' ? 'EIP-2612签名存款无需预先授权，节省一次交易的gas费用' : 
-                      'Permit2提供更强大的签名授权机制，支持批量操作和更灵活的权限控制'}
+                💡 EIP-2612签名存款无需预先授权，节省一次交易的gas费用
               </Typography.Text>
             )}
             {depositMethod === 'permit2' && (
