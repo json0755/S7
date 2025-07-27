@@ -17,7 +17,7 @@ contract NFTMarketTest is Test {
     function setUp() public {
         myToken = new MyToken("TestToken", "TT");
         myNFT = new MyNFT();
-        nftMarket = new NFTMarket(address(myToken));
+        nftMarket = new NFTMarket(address(myToken), address(this)); // 使用测试合约地址作为签名者
     }
 
     // 测试成功上架 NFT

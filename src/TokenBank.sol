@@ -8,6 +8,7 @@ interface IBaseERC20 {
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external; // EIP2612 permit 函数声明
 }
 
+
 // TokenBank 合约，允许用户存入和取出 BaseERC20 Token
 contract TokenBank {
     IBaseERC20 public token; // 存储 BaseERC20 Token 的合约地址
