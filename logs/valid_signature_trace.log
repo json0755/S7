@@ -1,0 +1,56 @@
+No files changed, compilation skipped
+
+Ran 1 test for test/NFTMarketWhitelist.t.sol:NFTMarketWhitelistTest
+[PASS] testPermitBuyWithValidSignature() (gas: 166297)
+Traces:
+  [200597] NFTMarketWhitelistTest::testPermitBuyWithValidSignature()
+    ├─ [2291] NFTMarket::getMessageHash(Identity: [0x0000000000000000000000000000000000000004], BaseERC721: [0x535B3D7A252fa034Ed71F0C53ec0C6F784cB64E1], 1, 12345 [1.234e4]) [staticcall]
+    │   └─ ← [Return] 0x8aa8331606e736bce9d71f226880feb1588adf563ab5d8bbf4cae3b0a92c63be
+    ├─ [0] VM::sign("<pk>", 0x5143e2833cb449e8dd310bc7a33a04c885214bdd12dc546e54a82ff8e695a220) [staticcall]
+    │   └─ ← [Return] 28, 0x1b547caecb460375b126bc2229459bae63dce603d8f1acec5c4205ceb0d598dd, 0x02cbeb74056ca3c475899dca7781d4d623e6a3b4614d341bf030b73e9059240f
+    ├─ [0] VM::startPrank(Identity: [0x0000000000000000000000000000000000000004])
+    │   └─ ← [Return]
+    ├─ [23129] BaseERC20::approve(NFTMarket: [0xc051134F56d56160E8c8ed9bB3c439c78AB27cCc], 100000000000000000000 [1e20])
+    │   └─ ← [Return] true
+    ├─ [2851] BaseERC20::balanceOf(Identity: [0x0000000000000000000000000000000000000004]) [staticcall]
+    │   └─ ← [Return] 1000000000000000000000 [1e21]
+    ├─ [2851] BaseERC20::balanceOf(RIPEMD-160: [0x0000000000000000000000000000000000000003]) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [124600] NFTMarket::permitBuy(BaseERC721: [0x535B3D7A252fa034Ed71F0C53ec0C6F784cB64E1], 1, 12345 [1.234e4], 0x1b547caecb460375b126bc2229459bae63dce603d8f1acec5c4205ceb0d598dd02cbeb74056ca3c475899dca7781d4d623e6a3b4614d341bf030b73e9059240f1c)
+    │   ├─ [3000] PRECOMPILES::ecrecover(0x5143e2833cb449e8dd310bc7a33a04c885214bdd12dc546e54a82ff8e695a220, 28, 12361722594174495981934718757331784803078863649945726573153921652286578596061, 1264920689633107213101946592013700991278723159585610274342890944653451404303) [staticcall]
+    │   │   └─ ← [Return] 0x0000000000000000000000001be31a94361a391bbafb2a4ccd704f57dc04d4bb
+    │   ├─ [1223] BaseERC20::allowance(Identity: [0x0000000000000000000000000000000000000004], NFTMarket: [0xc051134F56d56160E8c8ed9bB3c439c78AB27cCc]) [staticcall]
+    │   │   └─ ← [Return] 100000000000000000000 [1e20]
+    │   ├─ [851] BaseERC20::balanceOf(Identity: [0x0000000000000000000000000000000000000004]) [staticcall]
+    │   │   └─ ← [Return] 1000000000000000000000 [1e21]
+    │   ├─ [25959] BaseERC20::transferFrom(Identity: [0x0000000000000000000000000000000000000004], RIPEMD-160: [0x0000000000000000000000000000000000000003], 100000000000000000000 [1e20])
+    │   │   └─ ← [Return] true
+    │   ├─ [44728] BaseERC721::transferFrom(RIPEMD-160: [0x0000000000000000000000000000000000000003], Identity: [0x0000000000000000000000000000000000000004], 1)
+    │   │   ├─ emit Approval(owner: RIPEMD-160: [0x0000000000000000000000000000000000000003], approved: 0x0000000000000000000000000000000000000000, tokenId: 1)
+    │   │   ├─ emit Transfer(from: RIPEMD-160: [0x0000000000000000000000000000000000000003], to: Identity: [0x0000000000000000000000000000000000000004], tokenId: 1)
+    │   │   └─ ← [Stop]
+    │   ├─ emit WhitelistBought(buyer: Identity: [0x0000000000000000000000000000000000000004], nftAddress: BaseERC721: [0x535B3D7A252fa034Ed71F0C53ec0C6F784cB64E1], tokenId: 1, price: 100000000000000000000 [1e20])
+    │   └─ ← [Stop]
+    ├─ [921] BaseERC721::ownerOf(1) [staticcall]
+    │   └─ ← [Return] Identity: [0x0000000000000000000000000000000000000004]
+    ├─ [0] VM::assertEq(Identity: [0x0000000000000000000000000000000000000004], Identity: [0x0000000000000000000000000000000000000004], "NFT should be transferred to buyer") [staticcall]
+    │   └─ ← [Return]
+    ├─ [851] BaseERC20::balanceOf(Identity: [0x0000000000000000000000000000000000000004]) [staticcall]
+    │   └─ ← [Return] 900000000000000000000 [9e20]
+    ├─ [0] VM::assertEq(900000000000000000000 [9e20], 900000000000000000000 [9e20], "Buyer should pay the price") [staticcall]
+    │   └─ ← [Return]
+    ├─ [851] BaseERC20::balanceOf(RIPEMD-160: [0x0000000000000000000000000000000000000003]) [staticcall]
+    │   └─ ← [Return] 100000000000000000000 [1e20]
+    ├─ [0] VM::assertEq(100000000000000000000 [1e20], 100000000000000000000 [1e20], "Seller should receive payment") [staticcall]
+    │   └─ ← [Return]
+    ├─ [6121] NFTMarket::listings(BaseERC721: [0x535B3D7A252fa034Ed71F0C53ec0C6F784cB64E1], 1) [staticcall]
+    │   └─ ← [Return] RIPEMD-160: [0x0000000000000000000000000000000000000003], BaseERC721: [0x535B3D7A252fa034Ed71F0C53ec0C6F784cB64E1], 1, 100000000000000000000 [1e20], false
+    ├─ [0] VM::assertFalse(false, "NFT should be delisted") [staticcall]
+    │   └─ ← [Return]
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return]
+    └─ ← [Stop]
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 1.14ms (450.81µs CPU time)
+
+Ran 1 test suite in 5.00ms (1.14ms CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)
