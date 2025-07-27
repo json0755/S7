@@ -1,8 +1,26 @@
+// TokenBank智能合约相关类型定义
+export interface TokenPermissions {
+  token: `0x${string}`;
+  amount: bigint;
+}
+
+export interface PermitTransferFrom {
+  permitted: TokenPermissions;
+  nonce: bigint;
+  deadline: bigint;
+}
+
+export interface SignatureTransferDetails {
+  to: `0x${string}`;
+  requestedAmount: bigint;
+}
+
 export const tokenBankAbi = [
     {
       "type": "constructor",
       "inputs": [
-        { "name": "tokenAddress", "type": "address", "internalType": "address" }
+        { "name": "tokenAddress", "type": "address", "internalType": "address" },
+        { "name": "permit2Address", "type": "address", "internalType": "address" }
       ],
       "stateMutability": "nonpayable"
     },
@@ -34,6 +52,50 @@ export const tokenBankAbi = [
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "depositWithPermit2",
+      "inputs": [
+        { "name": "amount", "type": "uint256", "internalType": "uint256" },
+        { "name": "nonce", "type": "uint256", "internalType": "uint256" },
+        { "name": "deadline", "type": "uint256", "internalType": "uint256" },
+        {
+          "name": "transferDetails",
+          "type": "tuple",
+          "internalType": "struct SignatureTransferDetails",
+          "components": [
+            { "name": "to", "type": "address", "internalType": "address" },
+            { "name": "requestedAmount", "type": "uint256", "internalType": "uint256" }
+          ]
+        },
+        { "name": "signature", "type": "bytes", "internalType": "bytes" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getBalance",
+      "inputs": [{ "name": "user", "type": "address", "internalType": "address" }],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getTotalBalance",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "permit2",
+      "inputs": [],
+      "outputs": [
+        { "name": "", "type": "address", "internalType": "contract IPermit2" }
+      ],
+      "stateMutability": "view"
     },
     {
       "type": "function",
