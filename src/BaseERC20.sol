@@ -61,6 +61,13 @@ contract BaseERC20 is IERC20 {
     function isContract(address account) internal view returns (bool) { // 判断地址是否为合约
         uint256 size; // 存储代码大小
         assembly { size := extcodesize(account) } // 获取地址的代码大小
-        return size > 0; // 如果大于0则为合约
+        return size > 0; // 如果大小0则为合约
+    }
+
+    // 新增：mint函数
+    function mint(address to, uint256 amount) external {
+        _totalSupply += amount; // 增加总供应量
+        _balances[to] += amount; // 增加目标地址余额
+        emit Transfer(address(0), to, amount); // 发出转账事件
     }
 }

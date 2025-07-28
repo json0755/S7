@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "forge-std/Script.sol";
+import "../src/TokenBank.sol";
+
+contract CallDepositWithPermit2Script is Script {
+    
+    // 配置参数
+    address constant TOKEN_BANK_ADDRESS = 0x1111111111111111111111111111111111111111; // 替换为实际地址
+    address constant USER_ADDRESS = 0x2222222222222222222222222222222222222222; // 替换为实际地址
+    
+    // 交易参数（从签名工具获得）
+    uint256 constant AMOUNT = 100 * 10**18; // 100 tokens
+    uint256 constant NONCE = 1753626377635974742; // 替换为实际nonce
+    uint256 constant DEADLINE = 1753712777; // 替换为实际deadline
+    bytes constant SIGNATURE = hex""; // 替换为实际签名（去掉0x前缀）
+    
+    function run() external {
+        vm.startBroadcast();
+        
+        console2.log("Start calling TokenBank.depositWithPermit2...");
+        console2.log("TokenBank address:", TOKEN_BANK_ADDRESS);
+        console2.log("User address:", USER_ADDRESS);
+        console2.log("Deposit amount:", AMOUNT);
+        console2.log("Nonce:", NONCE);
+        console2.log("Deadline:", DEADLINE);
+        
+        // 1. Get TokenBank contract instance
+        TokenBank tokenBank = TokenBank(TOKEN_BANK_ADDRESS);
+        
+        // 2. Query balance before deposit
+        uint256 balanceBefore = tokenBank.getBalance(USER_ADDRESS);
+        console2.log("Balance before:", balanceBefore);
+        
+        // 3. Construct transferDetails
+        SignatureTransferDetails memory transferDetails = SignatureTransferDetails({
+            to: TOKEN_BANK_ADDRESS,
+            requestedAmount: AMOUNT
+        });
+        
+        // 4. Call depositWithPermit2
+        console2.log("Executing depositWithPermit2...");
+        
+        tokenBank.depositWithPermit2(
+            AMOUNT,
+            NONCE,
+            DEADLINE,
+            transferDetails,
+            SIGNATURE
+        );
+        
+        // 5. Query balance after deposit
+        uint256 balanceAfter = tokenBank.getBalance(USER_ADDRESS);
+        console2.log("Balance after:", balanceAfter);
+        console2.log("Increase:", balanceAfter - balanceBefore);
+        
+        console2.log("depositWithPermit2 call successful!");
+        
+        vm.stopBroadcast();
+    }
+} 

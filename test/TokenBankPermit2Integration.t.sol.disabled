@@ -1,0 +1,325 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import "forge-std/Test.sol";
+import "../src/TokenBank.sol";
+import "../src/BaseERC20.sol";
+import "../src/Permit2.sol";
+
+// Permit2 structures are accessed directly via Permit2.StructName
+
+contract TokenBankPermit2IntegrationTest is Test {
+    TokenBank public tokenBank;
+    BaseERC20 public token;
+    Permit2 public permit2;
+    
+    address public user;
+    uint256 private userPrivateKey = 0xB0B;
+    
+    uint256 constant INITIAL_SUPPLY = 1000000 ether; // 1M tokens
+    
+    // Permit2 EIP-712 相关常量
+    string constant PERMIT2_DOMAIN_NAME = "Permit2";
+    string constant PERMIT2_DOMAIN_VERSION = "1";
+    
+    // Permit2 类型哈希
+    bytes32 constant TOKEN_PERMISSIONS_TYPEHASH = 
+        keccak256("TokenPermissions(address token,uint256 amount)");
+    bytes32 constant PERMIT_TRANSFER_FROM_TYPEHASH = 
+        keccak256("PermitTransferFrom(TokenPermissions permitted,uint256 nonce,uint256 deadline)TokenPermissions(address token,uint256 amount)");
+    
+    function setUp() public {
+        user = vm.addr(userPrivateKey);
+        
+        console2.log("Setting up Permit2 integration test...");
+        console2.log("User address:", user);
+        
+        // 部署合约
+        token = new BaseERC20(INITIAL_SUPPLY);
+        permit2 = new Permit2();
+        tokenBank = new TokenBank(address(token), address(permit2));
+        
+        console2.log("Token address:", address(token));
+        console2.log("Permit2 address:", address(permit2));
+        console2.log("TokenBank address:", address(tokenBank));
+        
+        // 给用户转一些token用于测试
+        token.transfer(user, 10000 ether);
+        
+        console2.log("User token balance:", token.balanceOf(user));
+        console2.log("Setup complete");
+    }
+    
+    function testFullPermit2DepositFlow() public {
+        console2.log("\n=== Testing Full Permit2 Deposit Flow ===");
+        
+        uint256 depositAmount = 300 ether;
+        uint256 nonce = 1;
+        uint256 deadline = block.timestamp + 3600; // 1小时后过期
+        
+        console2.log("Deposit amount:", depositAmount);
+        console2.log("Nonce:", nonce);
+        console2.log("Deadline:", deadline);
+        
+        // 第1步：用户授权Permit2合约
+        console2.log("\n--- Step 1: Approve Permit2 Contract ---");
+        vm.startPrank(user);
+        token.approve(address(permit2), type(uint256).max);
+        vm.stopPrank();
+        
+        uint256 allowance = token.allowance(user, address(permit2));
+        console2.log("User -> Permit2 allowance:", allowance);
+        assertGt(allowance, depositAmount, "Permit2 allowance should be sufficient");
+        
+        // 第2步：构造Permit2签名数据
+        console2.log("\n--- Step 2: Construct Signature Data ---");
+        
+        // 获取域分隔符
+        bytes32 domainSeparator = permit2.DOMAIN_SEPARATOR();
+        console2.log("Domain separator:");
+        console2.logBytes32(domainSeparator);
+        
+        // 构造结构化数据
+        bytes32 tokenPermissionsHash = keccak256(abi.encode(
+            TOKEN_PERMISSIONS_TYPEHASH,
+            address(token),
+            depositAmount
+        ));
+        
+        bytes32 structHash = keccak256(abi.encode(
+            PERMIT_TRANSFER_FROM_TYPEHASH,
+            tokenPermissionsHash,
+            nonce,
+            deadline
+        ));
+        
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            "\x19\x01",
+            domainSeparator,
+            structHash
+        ));
+        
+        console2.log("Message hash:");
+        console2.logBytes32(messageHash);
+        
+        // 第3步：生成签名
+        console2.log("\n--- Step 3: Generate Signature ---");
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPrivateKey, messageHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        
+        console2.log("Signature length:", signature.length);
+        console2.log("Signature v:", v);
+        console2.log("Signature r:");
+        console2.logBytes32(r);
+        console2.log("Signature s:");
+        console2.logBytes32(s);
+        
+        // 第4步：验证nonce状态
+        console2.log("\n--- Step 4: Verify Nonce Status ---");
+        uint256 word = nonce >> 8; // nonce / 256
+        uint256 bit = nonce & 0xff; // nonce % 256
+        uint256 bitmap = permit2.nonceBitmap(user, word);
+        bool nonceUsed = bitmap & (1 << bit) != 0;
+        
+        console2.log("Nonce word:", word);
+        console2.log("Nonce bit:", bit);
+        console2.log("Current bitmap:", bitmap);
+        console2.log("Nonce used:", nonceUsed);
+        
+        assertFalse(nonceUsed, "Nonce should not be used yet");
+        
+        // 第5步：构造转账详情
+        console2.log("\n--- Step 5: Construct Transfer Details ---");
+        
+        SignatureTransferDetails memory transferDetails = SignatureTransferDetails({
+            to: address(tokenBank),
+            requestedAmount: depositAmount
+        });
+        
+        console2.log("Transfer to:", transferDetails.to);
+        console2.log("Transfer amount:", transferDetails.requestedAmount);
+        
+        // 第6步：检查初始状态
+        console2.log("\n--- Step 6: Check Initial State ---");
+        uint256 userTokenBalanceBefore = token.balanceOf(user);
+        uint256 userBankBalanceBefore = tokenBank.getBalance(user);
+        uint256 totalBankBalanceBefore = tokenBank.getTotalBalance();
+        
+        console2.log("User token balance before:", userTokenBalanceBefore);
+        console2.log("User bank balance before:", userBankBalanceBefore);
+        console2.log("Total bank balance before:", totalBankBalanceBefore);
+        
+        // 第7步：执行depositWithPermit2
+        console2.log("\n--- Step 7: Execute depositWithPermit2 ---");
+        vm.prank(user);
+        tokenBank.depositWithPermit2(depositAmount, nonce, deadline, transferDetails, signature);
+        
+        // 第8步：验证结果
+        console2.log("\n--- Step 8: Verify Results ---");
+        uint256 userTokenBalanceAfter = token.balanceOf(user);
+        uint256 userBankBalanceAfter = tokenBank.getBalance(user);
+        uint256 totalBankBalanceAfter = tokenBank.getTotalBalance();
+        
+        console2.log("User token balance after:", userTokenBalanceAfter);
+        console2.log("User bank balance after:", userBankBalanceAfter);
+        console2.log("Total bank balance after:", totalBankBalanceAfter);
+        
+        // 验证余额变化
+        assertEq(userTokenBalanceBefore - userTokenBalanceAfter, depositAmount, "Token should be transferred from user");
+        assertEq(userBankBalanceAfter - userBankBalanceBefore, depositAmount, "Bank balance should increase");
+        assertEq(totalBankBalanceAfter - totalBankBalanceBefore, depositAmount, "Total bank balance should increase");
+        
+        // 验证nonce已使用
+        uint256 bitmapAfter = permit2.nonceBitmap(user, word);
+        bool nonceUsedAfter = bitmapAfter & (1 << bit) != 0;
+        console2.log("Nonce used after:", nonceUsedAfter);
+        assertTrue(nonceUsedAfter, "Nonce should be marked as used");
+        
+        console2.log("\n[SUCCESS] Permit2 Deposit Test Completely Successful!");
+    }
+    
+    function testPermit2DepositWithWrongSignature() public {
+        console2.log("\n=== Testing Wrong Signature ===");
+        
+        uint256 depositAmount = 300 ether;
+        uint256 nonce = 1;
+        uint256 deadline = block.timestamp + 3600;
+        
+        // 授权Permit2
+        vm.prank(user);
+        token.approve(address(permit2), type(uint256).max);
+        
+        // 使用错误的私钥签名
+        uint256 wrongPrivateKey = 0xDEADBEEF;
+        
+        bytes32 domainSeparator = permit2.DOMAIN_SEPARATOR();
+        bytes32 tokenPermissionsHash = keccak256(abi.encode(
+            TOKEN_PERMISSIONS_TYPEHASH,
+            address(token),
+            depositAmount
+        ));
+        bytes32 structHash = keccak256(abi.encode(
+            PERMIT_TRANSFER_FROM_TYPEHASH,
+            tokenPermissionsHash,
+            nonce,
+            deadline
+        ));
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            "\x19\x01",
+            domainSeparator,
+            structHash
+        ));
+        
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongPrivateKey, messageHash);
+        bytes memory wrongSignature = abi.encodePacked(r, s, v);
+        
+        SignatureTransferDetails memory transferDetails = SignatureTransferDetails({
+            to: address(tokenBank),
+            requestedAmount: depositAmount
+        });
+        
+        // 应该失败
+        vm.prank(user);
+        vm.expectRevert();
+        tokenBank.depositWithPermit2(depositAmount, nonce, deadline, transferDetails, wrongSignature);
+        
+        console2.log("[SUCCESS] Wrong signature correctly rejected");
+    }
+    
+    function testPermit2DepositWithExpiredDeadline() public {
+        console2.log("\n=== Testing Expired Signature ===");
+        
+        uint256 depositAmount = 300 ether;
+        uint256 nonce = 1;
+        uint256 deadline = block.timestamp - 1; // 已过期
+        
+        // 授权Permit2
+        vm.prank(user);
+        token.approve(address(permit2), type(uint256).max);
+        
+        // 正确签名但过期
+        bytes32 domainSeparator = permit2.DOMAIN_SEPARATOR();
+        bytes32 tokenPermissionsHash = keccak256(abi.encode(
+            TOKEN_PERMISSIONS_TYPEHASH,
+            address(token),
+            depositAmount
+        ));
+        bytes32 structHash = keccak256(abi.encode(
+            PERMIT_TRANSFER_FROM_TYPEHASH,
+            tokenPermissionsHash,
+            nonce,
+            deadline
+        ));
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            "\x19\x01",
+            domainSeparator,
+            structHash
+        ));
+        
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPrivateKey, messageHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        
+        SignatureTransferDetails memory transferDetails = SignatureTransferDetails({
+            to: address(tokenBank),
+            requestedAmount: depositAmount
+        });
+        
+        // 应该失败
+        vm.prank(user);
+        vm.expectRevert("SignatureExpired");
+        tokenBank.depositWithPermit2(depositAmount, nonce, deadline, transferDetails, signature);
+        
+        console2.log("[SUCCESS] Expired signature correctly rejected");
+    }
+    
+    function testPermit2DepositNonceReplay() public {
+        console2.log("\n=== Testing Nonce Replay Attack ===");
+        
+        uint256 depositAmount = 300 ether;
+        uint256 nonce = 1;
+        uint256 deadline = block.timestamp + 3600;
+        
+        // 授权足够的tokens
+        vm.prank(user);
+        token.approve(address(permit2), type(uint256).max);
+        
+        // 生成有效签名
+        bytes32 domainSeparator = permit2.DOMAIN_SEPARATOR();
+        bytes32 tokenPermissionsHash = keccak256(abi.encode(
+            TOKEN_PERMISSIONS_TYPEHASH,
+            address(token),
+            depositAmount
+        ));
+        bytes32 structHash = keccak256(abi.encode(
+            PERMIT_TRANSFER_FROM_TYPEHASH,
+            tokenPermissionsHash,
+            nonce,
+            deadline
+        ));
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            "\x19\x01",
+            domainSeparator,
+            structHash
+        ));
+        
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPrivateKey, messageHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        
+        SignatureTransferDetails memory transferDetails = SignatureTransferDetails({
+            to: address(tokenBank),
+            requestedAmount: depositAmount
+        });
+        
+        // 第一次使用 - 应该成功
+        vm.prank(user);
+        tokenBank.depositWithPermit2(depositAmount, nonce, deadline, transferDetails, signature);
+        console2.log("[SUCCESS] First use successful");
+        
+        // 第二次使用相同nonce - 应该失败
+        vm.prank(user);
+        vm.expectRevert("InvalidNonce");
+        tokenBank.depositWithPermit2(depositAmount, nonce, deadline, transferDetails, signature);
+        
+        console2.log("[SUCCESS] Nonce replay attack correctly prevented");
+    }
+} 

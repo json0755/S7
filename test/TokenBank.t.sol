@@ -36,7 +36,8 @@ contract TokenBankTest is Test {
         );
         
         // 部署 TokenBank
-        tokenBank = new TokenBank(address(token));
+        address permit2Address = 0x000000000022D473030F116dDEE9F6B43aC78BA3; // Permit2 官方地址
+        tokenBank = new TokenBank(address(token), permit2Address);
         
         // 给 user1 一些代币用于测试
         vm.prank(owner);
