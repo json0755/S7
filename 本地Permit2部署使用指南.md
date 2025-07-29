@@ -35,7 +35,7 @@ anvil
 # (1) 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (10000 ETH)
 # ...
 # Private Keys
-# (0) 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+# (0) 
 # ...
 ```
 
@@ -84,7 +84,7 @@ forge test --match-contract LocalPermit2Test -vv
 # 部署所有合约
 forge script script/DeployAllLocal.s.sol \
     --rpc-url http://127.0.0.1:8545 \
-    --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
+    --private-key  \
     --broadcast
 ```
 
@@ -140,7 +140,7 @@ import { localPermit2Abi, LOCAL_PERMIT2_DOMAIN_NAME, LOCAL_PERMIT2_DOMAIN_VERSIO
 ### **2. 导入测试账户**
 使用Anvil提供的私钥导入账户：
 ```
-私钥: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+私钥: 
 地址: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 ```
 

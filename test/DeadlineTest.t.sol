@@ -12,7 +12,7 @@ contract DeadlineTest is Test {
     TokenBank public tokenBank;
     
     address public user;
-    uint256 public userPrivateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+    uint256 public userPrivateKey = ;
     
     uint256 constant INITIAL_SUPPLY = 10000;
     uint256 constant TEST_AMOUNT = 100e18;
