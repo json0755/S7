@@ -67,8 +67,8 @@ export const tokenBankAbi = [
     },
     {
       "type": "function",
-      "name": "getBalance",
-      "inputs": [{ "name": "user", "type": "address", "internalType": "address" }],
+      "name": "balanceOf",
+      "inputs": [{ "name": "account", "type": "address", "internalType": "address" }],
       "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
       "stateMutability": "view"
     },

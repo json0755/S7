@@ -70,7 +70,7 @@ async function callDepositWithPermit2() {
         const tokenBank = new ethers.Contract(config.tokenBankAddress, tokenBankABI, wallet);
         
         // 5. 查询存款前余额
-        const balanceBefore = await tokenBank.getBalance(wallet.address);
+        const balanceBefore = await tokenBank.balanceOf(wallet.address);
         console.log("\n📊 存款前余额:", ethers.formatEther(balanceBefore), "tokens");
         
         // 6. 调用 depositWithPermit2
@@ -98,7 +98,7 @@ async function callDepositWithPermit2() {
         console.log("Gas使用量:", receipt.gasUsed.toString());
         
         // 8. 查询存款后余额
-        const balanceAfter = await tokenBank.getBalance(wallet.address);
+        const balanceAfter = await tokenBank.balanceOf(wallet.address);
         console.log("\n📊 存款后余额:", ethers.formatEther(balanceAfter), "tokens");
         console.log("存款增加:", ethers.formatEther(balanceAfter - balanceBefore), "tokens");
         

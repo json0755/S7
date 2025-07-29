@@ -1,6 +1,7 @@
 {
 	"type": "module",
 	"dependencies": {
+		"@openzeppelin/contracts": "^5.4.0",
 		"@types/react": "^19.1.8",
 		"@types/react-dom": "^19.1.6",
 		"ethers": "^6.15.0",

@@ -8,8 +8,8 @@ contract MintEIP2612TokensScript is Script {
     // Set your EIP2612Token contract address here
     address constant TOKEN_ADDRESS = 0x0000000000000000000000000000000000000000; // Replace with actual address
     
-    // Test user addresses to mint tokens for
-    address[] public testUsers = [
+    // User addresses to mint tokens for
+    address[] public users = [
         0x1Be31A94361a391bBaFB2a4CCd704F57dc04d4bb, // Replace with your test address
         0x70997970C51812dc3A010C7d01b50e0d17dc79C8  // Replace with another test address
     ];
@@ -33,8 +33,8 @@ contract MintEIP2612TokensScript is Script {
         // Mint tokens for each test user
         uint256 mintAmount = 1000; // 1000 tokens
         
-        for (uint256 i = 0; i < testUsers.length; i++) {
-            address user = testUsers[i];
+        for (uint256 i = 0; i < users.length; i++) {
+            address user = users[i];
             uint256 beforeBalance = token.balanceOf(user);
             
             console2.log("Minting tokens for user:", user);
@@ -69,4 +69,4 @@ contract MintEIP2612TokensScript is Script {
         
         console2.log("Minted", amount, "tokens for user", user);
     }
-} 
+}
